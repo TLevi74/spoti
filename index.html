@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Top Songs Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Decorative background shapes -->
+    <div class="background-shapes">
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+        <div class="shape shape-6"></div>
+    </div>
+    
+    <div class="container">
+        <h1>Spotify Top Songs Analyzer</h1>
+        
+        <div class="upload-section">
+            <label class="file-input-label" for="fileInput">
+                <span style="color: rgb(41, 41, 41);">📁 Select Spotify Files</span>
+            </label>
+            <input 
+                type="file" 
+                id="fileInput" 
+                multiple 
+                accept=".json"
+            >
+            <button id="analyzeBtn" disabled>Analyze Files</button>
+        </div>
+
+        <div id="status"></div>
+
+        <div id="resultsSection">
+            <h2>Your Top 10 Songs</h2>
+            <div class="two-column-grid">
+                <div>
+                    <ol id="topSongsList"></ol>
+                </div>
+                <div>
+                    <canvas id="topSongsChart"></canvas>
+                </div>
+            </div>
+
+            <hr>
+
+            <h2>Top Artists & Albums</h2>
+            <div class="two-column-grid">
+                <div>
+                    <h3>Top 10 Artists</h3>
+                    <canvas id="topArtistsChart"></canvas>
+                </div>
+                <div>
+                    <h3>Top 10 Albums</h3>
+                    <canvas id="topAlbumsChart"></canvas>
+                </div>
+            </div>
+            <div id="topArtists"></div>
+
+            <hr>
+
+            <h2>Listening Habits & Patterns</h2>
+            <div class="two-column-grid">
+                <div>
+                    <h3>Listening by Day of Week</h3>
+                    <canvas id="dayOfWeekChart"></canvas>
+                </div>
+                <div>
+                    <h3>Listening by Hour of Day</h3>
+                    <canvas id="hourOfDayChart"></canvas>
+                </div>
+            </div>
+            <div id="listeningHabits"></div>
+
+            <hr>
+
+            <h2>Year by Year Breakdown</h2>
+            <div class="chart-wrapper">
+                <canvas id="yearlyChartHours"></canvas>
+            </div>
+            <div id="yearlyStats"></div>
+
+            <hr>
+
+            <h2>Overall Stats</h2>
+            <div id="overallStats"></div>
+
+            <hr>
+
+            <h2>Skip Rate & Behavior</h2>
+            <div class="two-column-grid">
+                <div>
+                    <h3>Skip Rate</h3>
+                    <canvas id="skipRateChart"></canvas>
+                </div>
+                <div>
+                    <h3>Listening Mode</h3>
+                    <canvas id="modeChart"></canvas>
+                </div>
+            </div>
+
+            <hr>
+
+            <h2>Usage Patterns</h2>
+            <div class="two-column-grid">
+                <div>
+                    <h3>Play Frequency Distribution</h3>
+                    <canvas id="playFrequencyChart"></canvas>
+                </div>
+                <div>
+                    <h3>Monthly Activity</h3>
+                    <canvas id="monthlyActivityChart"></canvas>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Colorful background lines for Fun & Random Stats -->
+            <div class="random-facts-lines">
+                <div class="random-line line-1"></div>
+                <div class="random-line line-2"></div>
+                <div class="random-line line-3"></div>
+                <div class="random-line line-4"></div>
+                <div class="random-line line-5"></div>
+                <div class="random-line line-6"></div>
+            </div>
+
+            <h2>Fun & Random Stats</h2>
+            <div id="funStats"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="scroll-animations.js"></script>
+
+    <footer>
+        Made by GitHub Copilot
+    </footer>
+</body>
+</html>

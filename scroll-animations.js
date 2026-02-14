@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dynamicShapes = [];
     let lastScrollY = 0;
     let shapeCounter = 6; // Start after existing 6 shapes
+    const createdShapeIds = new Set(); // Track which shapes have been created
     
     window.addEventListener('scroll', () => {
         const scrollPosition = window.pageYOffset;
@@ -115,8 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (scrollPosition > lastScrollY && scrollProgress > 0.6) {
             const maxHeight = document.documentElement.scrollHeight - window.innerHeight;
             // Create a new shape every 400px of scroll in the last 40% of the page
-            if (scrollPosition % 400 < 10 && dynamicShapes.length < 20) {
+            if (scrollPosition % 400 < 10 && dynamicShapes.length < 20 && !createdShapeIds.has(shapeCounter)) {
                 createDynamicShape(shapeCounter);
+                createdShapeIds.add(shapeCounter);
                 shapeCounter++;
             }
         }

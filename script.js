@@ -98,7 +98,9 @@ analyzeBtn.addEventListener('click', analyzeFiles);
 
 async function analyzeFiles() {
     try {
-        statusDiv.textContent = 'Processing files...';
+        statusDiv.textContent = '';
+        const progressContainer = document.getElementById('progressContainer');
+        progressContainer.style.display = 'block';
         resultsSection.classList.remove('show');
         
         const files = fileInput.files;
@@ -116,6 +118,8 @@ async function analyzeFiles() {
             try {
                 data = JSON.parse(jsonData);
             } catch (e) {
+                const progressContainer = document.getElementById('progressContainer');
+                progressContainer.style.display = 'none';
                 statusDiv.textContent = `Error parsing ${file.name}: ${e.message}`;
                 return;
             }
@@ -163,6 +167,8 @@ async function analyzeFiles() {
         }
         
         if (allEntries.length === 0) {
+            const progressContainer = document.getElementById('progressContainer');
+            progressContainer.style.display = 'none';
             statusDiv.textContent = 'No song data found in the uploaded files.';
             return;
         }
@@ -183,9 +189,16 @@ async function analyzeFiles() {
         
         // Display results
         await displayResults(topSongs, stats);
-        statusDiv.textContent = '';
+        
+        // Hide progress bar
+        const progressContainer = document.getElementById('progressContainer');
+        progressContainer.style.display = 'none';
+        statusDiv.textContent = '✅ Analysis Complete!';
         
     } catch (error) {
+        // Hide progress bar on error
+        const progressContainer = document.getElementById('progressContainer');
+        progressContainer.style.display = 'none';
         statusDiv.textContent = `Error: ${error.message}`;
     }
 }

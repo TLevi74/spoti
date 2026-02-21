@@ -393,6 +393,133 @@ h1 {
 }
 
 /* =======================
+   PROGRESS BAR
+   ======================= */
+
+.progress-container {
+    width: 100%;
+    padding: 30px 20px;
+    text-align: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.progress-bar-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.progress-text {
+    color: var(--primary-green-light);
+    font-size: 1.05em;
+    font-weight: 600;
+    margin-bottom: 20px;
+    animation: pulse-text 1.5s ease-in-out infinite;
+    text-shadow: 0 0 10px rgba(29, 185, 84, 0.4);
+}
+
+@keyframes pulse-text {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+.progress-bar {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    background: rgba(29, 185, 84, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(29, 185, 84, 0.3);
+    box-shadow: 0 0 20px rgba(29, 185, 84, 0.2), inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        var(--primary-green) 0%,
+        var(--primary-green-light) 50%,
+        var(--accent-purple) 100%
+    );
+    background-size: 200% 100%;
+    width: 0%;
+    border-radius: 10px;
+    animation: progress-fill 2s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(29, 185, 84, 0.6), inset 0 0 5px rgba(255, 255, 255, 0.3);
+    position: relative;
+}
+
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.5),
+        transparent
+    );
+    animation: progress-glow 1.5s ease-in-out infinite;
+}
+
+.progress-bar-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    animation: shine 2s infinite;
+    border-radius: 10px;
+}
+
+@keyframes progress-fill {
+    0% {
+        width: 0%;
+        background-position: 200% 0;
+    }
+    50% {
+        width: 100%;
+        background-position: 0 0;
+    }
+    100% {
+        width: 0%;
+        background-position: -200% 0;
+    }
+}
+
+@keyframes progress-glow {
+    0% {
+        right: 100%;
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        right: -100%;
+        opacity: 0;
+    }
+}
+
+@keyframes shine {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* =======================
    RESULTS SECTION
    ======================= */
 

@@ -108,6 +108,9 @@ async function analyzeFiles() {
         const artistStats = {};
         const allEntries = [];
         
+        // Initialize variable for later use
+        let hasError = false;
+        
         // Process each file
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -118,7 +121,6 @@ async function analyzeFiles() {
             try {
                 data = JSON.parse(jsonData);
             } catch (e) {
-                const progressContainer = document.getElementById('progressContainer');
                 progressContainer.style.display = 'none';
                 statusDiv.textContent = `Error parsing ${file.name}: ${e.message}`;
                 return;
@@ -167,7 +169,6 @@ async function analyzeFiles() {
         }
         
         if (allEntries.length === 0) {
-            const progressContainer = document.getElementById('progressContainer');
             progressContainer.style.display = 'none';
             statusDiv.textContent = 'No song data found in the uploaded files.';
             return;
@@ -191,13 +192,11 @@ async function analyzeFiles() {
         await displayResults(topSongs, stats);
         
         // Hide progress bar
-        const progressContainer = document.getElementById('progressContainer');
         progressContainer.style.display = 'none';
         statusDiv.textContent = '✅ Analysis Complete!';
         
     } catch (error) {
         // Hide progress bar on error
-        const progressContainer = document.getElementById('progressContainer');
         progressContainer.style.display = 'none';
         statusDiv.textContent = `Error: ${error.message}`;
     }

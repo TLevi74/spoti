@@ -7,6 +7,76 @@ const topSongsList = document.getElementById('topSongsList');
 let charts = {}; // Store chart instances
 let imageCache = {}; // Cache for artist/album images
 
+// Country code to timezone mapping
+const countryToTimezone = {
+    'US': 'America/New_York', 'GB': 'Europe/London', 'CA': 'America/Toronto', 
+    'AU': 'Australia/Sydney', 'JP': 'Asia/Tokyo', 'IN': 'Asia/Kolkata', 
+    'DE': 'Europe/Berlin', 'FR': 'Europe/Paris', 'IT': 'Europe/Rome', 
+    'ES': 'Europe/Madrid', 'MX': 'America/Mexico_City', 'BR': 'America/Sao_Paulo',
+    'ZA': 'Africa/Johannesburg', 'SG': 'Asia/Singapore', 'KR': 'Asia/Seoul',
+    'NZ': 'Pacific/Auckland', 'NL': 'Europe/Amsterdam', 'SE': 'Europe/Stockholm',
+    'CH': 'Europe/Zurich', 'AT': 'Europe/Vienna', 'PL': 'Europe/Warsaw',
+    'RU': 'Europe/Moscow', 'TR': 'Europe/Istanbul', 'UA': 'Europe/Kyiv',
+    'CN': 'Asia/Shanghai', 'HK': 'Asia/Hong_Kong', 'TH': 'Asia/Bangkok',
+    'MY': 'Asia/Kuala_Lumpur', 'ID': 'Asia/Jakarta', 'PH': 'Asia/Manila',
+    'VN': 'Asia/Ho_Chi_Minh', 'IL': 'Asia/Jerusalem', 'AE': 'Asia/Dubai',
+    'SA': 'Asia/Riyadh', 'NG': 'Africa/Lagos', 'EG': 'Africa/Cairo',
+    'KE': 'Africa/Nairobi', 'AR': 'America/Argentina/Buenos_Aires', 'CL': 'America/Santiago',
+    'CO': 'America/Bogota', 'PE': 'America/Lima', 'CZ': 'Europe/Prague',
+    'PT': 'Europe/Lisbon', 'GR': 'Europe/Athens', 'HU': 'Europe/Budapest',
+    'IE': 'Europe/Dublin', 'DK': 'Europe/Copenhagen', 'NO': 'Europe/Oslo',
+    'FI': 'Europe/Helsinki', 'BE': 'Europe/Brussels', 'LU': 'Europe/Luxembourg'
+};
+
+// Function to get local date from UTC timestamp and country code
+function getLocalDateFromUTC(utcDate, countryCode) {
+    const timezone = countryToTimezone[countryCode] || 'UTC';
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    
+    const parts = formatter.formatToParts(utcDate);
+    const date = {};
+    parts.forEach(part => {
+        if (part.type === 'year') date.year = parseInt(part.value);
+        if (part.type === 'month') date.month = parseInt(part.value) - 1;
+        if (part.type === 'day') date.day = parseInt(part.value);
+        if (part.type === 'hour') date.hour = parseInt(part.value);
+        if (part.type === 'minute') date.minute = parseInt(part.value);
+        if (part.type === 'second') date.second = parseInt(part.value);
+    });
+    
+    return {
+        year: date.year,
+        month: date.month,
+        day: date.day,
+        hour: date.hour,
+        minute: date.minute,
+        second: date.second,
+        dayOfWeek: getLocalDayOfWeek(utcDate, countryCode)
+    };
+}
+
+// Function to get day of week in local timezone
+function getLocalDayOfWeek(utcDate, countryCode) {
+    const timezone = countryToTimezone[countryCode] || 'UTC';
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        weekday: 'long'
+    });
+    
+    const dayName = formatter.format(utcDate);
+    const dayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+    return dayMap[dayName] || 0;
+}
+
 // Configure Chart.js default font
 Chart.defaults.font.family = "'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 Chart.defaults.font.size = 13;
@@ -139,7 +209,7 @@ function calculateAllStats(allEntries, songStats, artistsArray, topSongs) {
     const uniqueSongs = Object.keys(songStats).length;
     const uniqueArtists = artistsArray.length;
     
-    // Listening by day of week
+    // Listening by day of week (converted to local timezone based on country)
     const dayStats = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const hourStats = {};
@@ -148,15 +218,22 @@ function calculateAllStats(allEntries, songStats, artistsArray, topSongs) {
     allEntries.forEach(e => {
         if (!e.ts) return;
         const date = new Date(e.ts);
-        dayStats[date.getUTCDay()] += (e.ms_played || 0);
-        hourStats[date.getUTCHours()] += (e.ms_played || 0);
+        const countryCode = e.conn_country || 'UTC';
+        const localDate = getLocalDateFromUTC(date, countryCode);
+        
+        dayStats[localDate.dayOfWeek] += (e.ms_played || 0);
+        hourStats[localDate.hour] += (e.ms_played || 0);
     });
     
-    // Year by year stats
+    // Year by year stats (converted to local timezone based on country)
     const yearStats = {};
     allEntries.forEach(e => {
         if (!e.ts) return;
-        const year = new Date(e.ts).getUTCFullYear();
+        const utcDate = new Date(e.ts);
+        const countryCode = e.conn_country || 'UTC';
+        const localDate = getLocalDateFromUTC(utcDate, countryCode);
+        const year = localDate.year;
+        
         if (!yearStats[year]) {
             yearStats[year] = {
                 totalMs: 0,
@@ -329,11 +406,15 @@ function calculateAllStats(allEntries, songStats, artistsArray, topSongs) {
     // Repeat artist count
     const topArtistCount = topArtists.slice(0, 5).length;
     
-    // Most variety in a day
+    // Most variety in a day (converted to local timezone based on country)
     const dayVariety = {};
     allEntries.forEach(e => {
         if (e.ts) {
-            const day = new Date(e.ts).toISOString().split('T')[0];
+            const utcDate = new Date(e.ts);
+            const countryCode = e.conn_country || 'UTC';
+            const localDate = getLocalDateFromUTC(utcDate, countryCode);
+            const day = `${localDate.year}-${String(localDate.month + 1).padStart(2, '0')}-${String(localDate.day).padStart(2, '0')}`;
+            
             if (!dayVariety[day]) dayVariety[day] = new Set();
             if (e.master_metadata_track_name) dayVariety[day].add(e.master_metadata_track_name);
         }
@@ -354,11 +435,14 @@ function calculateAllStats(allEntries, songStats, artistsArray, topSongs) {
     });
     const topReason = Object.entries(reasonStats).sort((a, b) => b[1] - a[1])[0];
     
-    // Monthly listening
+    // Monthly listening (converted to local timezone based on country)
     const monthlyStats = {};
     allEntries.forEach(e => {
         if (e.ts) {
-            const month = new Date(e.ts).toISOString().slice(0, 7);
+            const utcDate = new Date(e.ts);
+            const countryCode = e.conn_country || 'UTC';
+            const localDate = getLocalDateFromUTC(utcDate, countryCode);
+            const month = `${localDate.year}-${String(localDate.month + 1).padStart(2, '0')}`;
             monthlyStats[month] = (monthlyStats[month] || 0) + 1;
         }
     });
@@ -428,7 +512,10 @@ function findBusiestMonth(entries) {
     const months = {};
     entries.forEach(e => {
         if (e.ts) {
-            const month = new Date(e.ts).toISOString().slice(0, 7);
+            const utcDate = new Date(e.ts);
+            const countryCode = e.conn_country || 'UTC';
+            const localDate = getLocalDateFromUTC(utcDate, countryCode);
+            const month = `${localDate.year}-${String(localDate.month + 1).padStart(2, '0')}`;
             months[month] = (months[month] || 0) + (e.ms_played || 0);
         }
     });
@@ -576,7 +663,7 @@ async function displayResults(topSongs, stats) {
         data: {
             labels: stats.dayNames,
             datasets: [{
-                label: 'Hours Listened',
+                label: 'Hours Listened (Local Time)',
                 data: dayHours,
                 borderColor: 'rgba(29, 185, 84, 1)',
                 backgroundColor: 'rgba(29, 185, 84, 0.1)',
@@ -587,7 +674,16 @@ async function displayResults(topSongs, stats) {
         },
         options: {
             responsive: true,
-            plugins: { legend: { display: true } }
+            plugins: { 
+                legend: { display: true },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function() {
+                            return '(based on country timezone)';
+                        }
+                    }
+                }
+            }
         }
     });
     
@@ -600,7 +696,7 @@ async function displayResults(topSongs, stats) {
         data: {
             labels: hourLabels,
             datasets: [{
-                label: 'Hours Listened',
+                label: 'Hours Listened (Local Time)',
                 data: hourData,
                 backgroundColor: 'rgba(29, 160, 242, 0.6)',
                 borderColor: 'rgba(29, 160, 242, 1)',
@@ -609,7 +705,16 @@ async function displayResults(topSongs, stats) {
         },
         options: {
             responsive: true,
-            plugins: { legend: { display: false } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function() {
+                            return '(based on country timezone)';
+                        }
+                    }
+                }
+            }
         }
     });
     
@@ -772,7 +877,7 @@ async function displayResults(topSongs, stats) {
     
     listeningHabitsDiv.innerHTML = `
         ${createStatCard('Most Active Day', `${mostActiveDayName} (${mostActiveDayHours}h)`)}
-        ${createStatCard('Most Active Hour', `${mostActiveHourNum}:00 UTC (${mostActiveHourHour}h)`)}
+        ${createStatCard('Most Active Hour', `${mostActiveHourNum}:00 Local Time (${mostActiveHourHour}h)`)}
         ${createStatCard('Skipped Songs', `${stats.skippedCount} (${stats.skippedPercentage}%)`)}
         ${createStatCard('Offline Listening', `${stats.offlinePercentage}% of plays`)}
         ${createStatCard('Shuffle Mode', `${stats.shufflePercentage}% of plays`)}
@@ -849,7 +954,7 @@ async function displayResults(topSongs, stats) {
     funStatsHtml += '<div style="grid-column: 1 / -1; border-top: 2px solid rgba(29, 185, 84, 0.2); margin: 20px 0;"></div>';
     
     funStatsHtml += createStatCard('Busiest Month', `${stats.busiestMonth.month} (${busyMonthHours}h)`);
-    funStatsHtml += createStatCard('Quietest Hour', `${quietestHourNum}:00 UTC`);
+    funStatsHtml += createStatCard('Quietest Hour', `${quietestHourNum}:00 Local Time`);
     funStatsHtml += createStatCard('Early Morning', `${earlyMorningHours}h`);
     funStatsHtml += createStatCard('Late Night', `${lateNightHours}h`);
     funStatsHtml += createStatCard('Weekday', `${stats.weekdayPercentage}%`);
